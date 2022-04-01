@@ -1,4 +1,8 @@
+from cgitb import text
+from http.client import OK
 from tkinter import *
+import socket
+import re
 
 #******************************************************
 #
@@ -16,6 +20,7 @@ rond_croix="croix"
 #******************************************************
 
 def get_Colonne_Ligne(event):
+
     colonne=-1
     ligne=-1
 
@@ -69,9 +74,16 @@ def set_Rond(colonne,ligne):
 
 # Connexion au serveur distant 
 def Connexion():
-    pass
+    ipvalue=ip_serveur.get("1.0",END)
+    portvalue=port_serveur.get("1.0",END)
+    ipv4="^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+    result=re.match(ipv4,ipvalue)
+    if result:
+        socket_client.connect((ipvalue, int(portvalue)))
+        message.configure(text="connected")
 
 
+socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #******************************************************
 #
 #                      MAIN
@@ -89,8 +101,8 @@ message.grid(row = 0, column = 0, columnspan=2, padx=3, pady=3, sticky = W+E)
 bouton_quitter = Button(fen, text='Quitter', command=fen.destroy)
 bouton_quitter.grid(row = 2, column = 1, padx=3, pady=3, sticky = S+W+E)
 
-bouton_reload = Button(fen, text='Connexion')
-bouton_reload.grid(row = 2, column = 0, padx=3, pady=3, sticky = S+W+E)
+bouton_connexion = Button(fen, text='Connexion', command=Connexion)
+bouton_connexion.grid(row = 2, column = 0, padx=3, pady=3, sticky = S+W+E)
 
 # Canevas
 dessin=Canvas(fen, bg="white", width=301, height=301)
@@ -103,11 +115,15 @@ for i in range(4):
     lignes.append(dessin.create_line(100*i+2, 0, 100*i+2, 303, width=3))
 
 # Infos de connexion
-ip_serveur=Text(fen,height=1,width=30)
+ip_serveur=Text(fen,height=1,width=20)
 ip_serveur.grid(row=3,column=0)
 # ip_serveur.pack()
 
-dessin.bind('<Button-1>', get_Colonne_Ligne)
+#port_serveur
+port_serveur=Text(fen,height=1,width=15)
+port_serveur.grid(row=3,column=1)
 
+dessin.bind('<Button-1>', get_Colonne_Ligne)
+#bouton_connexion.bind('<Button-1>',Connexion)
 
 fen.mainloop()

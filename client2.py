@@ -1,13 +1,13 @@
 import socket
 
-hote = "localhost"
-port = 8080
+hote = "91.162.90.187"
+port = 16384
 
 socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket.connect((hote, port))
 
-# print ("Connection on {}".format(port))
-# socket.send("test".encode())
+print ("Connection on {}".format(port))
+socket.send("test".encode())
 
 data = socket.recv(1024)
 print(f"Received {data!r}")

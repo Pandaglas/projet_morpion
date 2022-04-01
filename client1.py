@@ -1,7 +1,7 @@
 import socket
 
-hote = "localhost"
-port = 8080
+hote = "91.162.90.187"
+port = 16384
 
 socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socket.connect((hote, port))
