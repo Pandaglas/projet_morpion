@@ -15,23 +15,24 @@ client2.sendall(("J2"+","+"o").encode())
 client1.sendall("start".encode())
 client2.sendall("start".encode())
 
-#while True:
+while True:
 
 
- #       response = client1.recv(255)
-  #      response2 = client2.recv(255)
-   #     if response != "":
-    #            print(response,"J1".encode())
+       response = client1.recv(255)
+       response2 = client2.recv(255)
+       if response != "":
+               print(response,"J1".encode())
     
-     #   client1.sendall(response)
+       client1.sendall(response)
        
         
-      #  if response2 != "":
-              #  print(response2,"j2".encode())
+       if response2 != "":
+               print(response2,"j2".encode())
     
-    #    client2.sendall(response2)
-     #   client2.sendall(response)
-      #  client1.sendall(response2)
+       client2.sendall(response2)
+       client2.sendall(response)
+       client1.sendall(response2)
+       
 print ("Close")
 client1.close()
 client2.close()

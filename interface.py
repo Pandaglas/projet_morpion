@@ -11,8 +11,9 @@ import re
 #******************************************************
 
 # Défini si l'utilisateur a les ronds ou les croix
-rond_croix="x"
+rond_croix="o"
 joueur="j1"
+start="no"
 #socket
 socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -49,13 +50,14 @@ def get_Colonne_Ligne(event):
         ligne=3
 
     # message.configure(text='Colonne = {0} et Ligne = {1}'.format(colonne, ligne))
+    if start=="start":
 
-    if (rond_croix == "x"):
-        set_Croix(colonne,ligne)
-    elif(rond_croix == "o"):
-        set_Rond(colonne,ligne)
+        socket_client.send((str(colonne)+","+str(ligne)).encode())
+        response_value=socket_client.recv(1024).decode()
+        print(response_value)
+        verif(str(response_value))
 
-    socket_client.send((str(colonne)+","+str(ligne)).encode())
+        
 
 # Dessine une croix à l'endroit indiqué par les arguments
 def set_Croix(colonne,ligne):
@@ -90,22 +92,37 @@ def Connexion():
         socket_client.connect((ipvalue, int(portvalue)))
         
         data = socket_client.recv(1024).decode()
+        print(data)
         
-        # print(data)
-        # print(f"Received {data!r}")
-
+        global rond_croix
         rond_croix=data.split(",")[1]
-        print(f"{rond_croix!r}")
 
+        global joueur
         joueur=data.split(",")[0]
         
         message.configure(text="connected "+rond_croix+" "+joueur)
 
         #waiting for start
+        global start
         start=socket_client.recv(1024).decode()
 
         if start=="start":
+
             message.configure(text="start")
+            
+
+def verif(value):
+    if (rond_croix == "x"):
+        set_Croix(int(value.split(",")[0]),int(value.split(",")[1]))
+    elif(rond_croix == "o"):
+        set_Rond(int(value.split(",")[0]),int(value.split(",")[1]))
+
+
+def quitter():
+    socket_client.close()
+    fen.destroy()
+
+
 
 
 #******************************************************
@@ -122,7 +139,7 @@ message=Label(fen, text='Ici du texte.')
 message.grid(row = 0, column = 0, columnspan=2, padx=3, pady=3, sticky = W+E)
 
 # Boutons
-bouton_quitter = Button(fen, text='Quitter', command=fen.destroy)
+bouton_quitter = Button(fen, text='Quitter', command=quitter)
 bouton_quitter.grid(row = 2, column = 1, padx=3, pady=3, sticky = S+W+E)
 
 bouton_connexion = Button(fen, text='Connexion', command=Connexion)
