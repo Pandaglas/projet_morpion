@@ -85,16 +85,19 @@ def Connexion():
     portvalue=portvalue.split("\n")[0]
     ipv4="^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
     result=re.match(ipv4,ipvalue)
+    
     if result:
         socket_client.connect((ipvalue, int(portvalue)))
-
+        
         data = socket_client.recv(1024).decode()
-        print(f"Received {data!r}")
+        
+        # print(data)
+        # print(f"Received {data!r}")
 
-        data_split=data.split(",")
-        rond_croix=data_split[1]
+        rond_croix=data.split(",")[1]
+        print(f"{rond_croix!r}")
 
-        joueur=data_split[0]
+        joueur=data.split(",")[0]
         
         message.configure(text="connected "+rond_croix+" "+joueur)
 
