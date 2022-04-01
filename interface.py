@@ -11,7 +11,11 @@ import re
 #******************************************************
 
 # Défini si l'utilisateur a les ronds ou les croix
-rond_croix="croix"
+rond_croix="x"
+joueur="j1"
+#socket
+socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 
 #******************************************************
 #
@@ -46,11 +50,12 @@ def get_Colonne_Ligne(event):
 
     # message.configure(text='Colonne = {0} et Ligne = {1}'.format(colonne, ligne))
 
-    if (rond_croix == "croix"):
+    if (rond_croix == "x"):
         set_Croix(colonne,ligne)
-    elif(rond_croix == "rond"):
+    elif(rond_croix == "o"):
         set_Rond(colonne,ligne)
 
+    socket_client.send((str(colonne)+","+str(ligne)).encode())
 
 # Dessine une croix à l'endroit indiqué par les arguments
 def set_Croix(colonne,ligne):
@@ -80,12 +85,24 @@ def Connexion():
     portvalue=portvalue.split("\n")[0]
     ipv4="^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
     result=re.match(ipv4,ipvalue)
-    socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     if result:
-        print(ipvalue)
-        print(portvalue)
         socket_client.connect((ipvalue, int(portvalue)))
-        message.configure(text="connected")
+
+        data = socket_client.recv(1024).decode()
+        print(f"Received {data!r}")
+
+        data_split=data.split(",")
+        rond_croix=data_split[1]
+
+        joueur=data_split[0]
+        
+        message.configure(text="connected "+rond_croix+" "+joueur)
+
+        #waiting for start
+        start=socket_client.recv(1024).decode()
+
+        if start=="start":
+            message.configure(text="start")
 
 
 #******************************************************
@@ -121,11 +138,13 @@ for i in range(4):
 # Infos de connexion
 ip_serveur=Text(fen,height=1,width=20)
 ip_serveur.grid(row=3,column=0)
+ip_serveur.insert(END,"91.162.90.187")
 # ip_serveur.pack()
 
 #port_serveur
 port_serveur=Text(fen,height=1,width=15)
 port_serveur.grid(row=3,column=1)
+port_serveur.insert(END,"16384")
 
 dessin.bind('<Button-1>', get_Colonne_Ligne)
 #bouton_connexion.bind('<Button-1>',Connexion)
