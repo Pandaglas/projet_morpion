@@ -75,15 +75,19 @@ def set_Rond(colonne,ligne):
 # Connexion au serveur distant 
 def Connexion():
     ipvalue=ip_serveur.get("1.0",END)
+    ipvalue=ipvalue.split("\n")[0]
     portvalue=port_serveur.get("1.0",END)
+    portvalue=portvalue.split("\n")[0]
     ipv4="^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
     result=re.match(ipv4,ipvalue)
+    socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     if result:
+        print(ipvalue)
+        print(portvalue)
         socket_client.connect((ipvalue, int(portvalue)))
         message.configure(text="connected")
 
 
-socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #******************************************************
 #
 #                      MAIN
