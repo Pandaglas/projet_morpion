@@ -31,7 +31,7 @@ socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #ip="91.162.90.187"
 #port="16384"
 ip="127.0.0.1"
-port="80"
+port="24124"
 
 
 #******************************************************
@@ -96,15 +96,16 @@ def Ajoute_Croix_Rond(value: str,other_sign: bool):
     else:
         sign="x"
 
-    colonne=int(value.split(",")[0])
-    ligne=int(value.split(",")[1])
+    if (value!=""):
+        colonne=int(value.split(",")[0])
+        ligne=int(value.split(",")[1])
 
-    if (sign == "x"):
-        set_Croix(colonne,ligne)
-        Ajoute_Dans_Log("["+str(colonne)+","+str(ligne)+"] X","J1")
-    elif(sign == "o"):
-        set_Rond(colonne,ligne)
-        Ajoute_Dans_Log("["+str(colonne)+","+str(ligne)+"] O","J2")
+        if (sign == "x"):
+            set_Croix(colonne,ligne)
+            Ajoute_Dans_Log("["+str(colonne)+","+str(ligne)+"] X","J1")
+        elif(sign == "o"):
+            set_Rond(colonne,ligne)
+            Ajoute_Dans_Log("["+str(colonne)+","+str(ligne)+"] O","J2")
 
 # Dessine une croix à l'endroit indiqué par les arguments
 def set_Croix(colonne: int,ligne: int):

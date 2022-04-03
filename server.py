@@ -1,4 +1,5 @@
 import socket
+import time
 
 #******************************************************
 #
@@ -10,7 +11,7 @@ import socket
 #ip="91.162.90.187"
 #port=16384
 ip="127.0.0.1"
-port=80
+port=24124
 
 #******************************************************
 #
@@ -25,26 +26,27 @@ port=80
 #                      MAIN
 #
 #******************************************************
+socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+socket.bind((ip, port))
+
+socket.listen(5)
+
+# Connexion au client1
+client1, address1 = socket.accept()
+print("{} connected".format(address1))
+client1.send(("J1"+","+"x").encode())
+
+# Connexion au client2
+client2, adress2 = socket.accept()
+print("{} connected".format(adress2))
+client2.send(("J2"+","+"o").encode())
+
+time.sleep(0.5)
+# Envoi notif de début de jeu
+client1.send("start".encode())
+client2.send("start".encode())
 
 try:
-    socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    socket.bind((ip, port))
-
-    socket.listen(5)
-
-    # Connexion au client1
-    client1, address1 = socket.accept()
-    print("{} connected".format(address1))
-    client1.sendall(("J1"+","+"x").encode())
-    
-    # Connexion au client2
-    client2, adress2 = socket.accept()
-    print("{} connected".format(adress2))
-    client2.sendall(("J2"+","+"o").encode())
-    
-    # Envoi notif de début de jeu
-    client1.sendall("start".encode())
-    client2.sendall("start".encode())
     
     continue_game=True
     while continue_game:
