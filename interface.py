@@ -27,6 +27,12 @@ start="no"
 #socket
 socket_client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+# Indique si c'est à ce client de jouer
+your_turn=False
+
+message_a_vous_de_jouer="A vous de jouer"
+message_en_attente="En attente de l'adversaire"
+
 # Datas Camille
 #ip="91.162.90.187"
 #port="16384"
@@ -78,11 +84,15 @@ def get_Colonne_Ligne(event):
 
         global joueur
         if (joueur=="J1"):
+            Ajoute_Dans_Log(message_en_attente,"SYSTEM")
+            comp_fen.update()
+            
             response_value=socket_client.recv(1024).decode()
             print(response_value)
 
             # Ajoute le signe de l'autre joueur
             Ajoute_Croix_Rond(str(response_value),True)
+            Ajoute_Dans_Log(message_a_vous_de_jouer,"SYSTEM")
         elif(joueur=="J2"):
             J2_Process()
         
@@ -166,6 +176,10 @@ def Connexion():
 
             if (joueur=="J2"):
                 J2_Process()
+            elif(joueur=="J1"):
+                global your_turn
+                your_turn=True
+                Ajoute_Dans_Log(message_a_vous_de_jouer,"SYSTEM")
         else:
             Ajoute_Dans_Log("Problème dans la connexion","SYSTEM")
 
@@ -174,12 +188,14 @@ def Connexion():
 # A la différence du J1 qui commence à jouer, le J2 attend d'abord la croix du J1 avant de jouer
 # Il doit donc être d'abord en mode "réception" puis en mode "envoi" (sans réception ensuite)
 def J2_Process():
+    Ajoute_Dans_Log(message_en_attente,"SYSTEM")
     comp_fen.update()
     response_value=socket_client.recv(1024).decode()
     print(response_value)
 
     # Ajoute le signe de l'autre joueur
     Ajoute_Croix_Rond(str(response_value),True)
+    Ajoute_Dans_Log(message_a_vous_de_jouer,"SYSTEM")
 
 # Quitte la fenêtre en fermant la socket active
 def quitter():
