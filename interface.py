@@ -34,10 +34,16 @@ message_a_vous_de_jouer="A vous de jouer"
 message_en_attente="En attente de l'adversaire"
 
 # Datas Camille
-#ip="91.162.90.187"
-#port="16384"
-ip="127.0.0.1"
-port="24124"
+ip="91.162.90.187"
+port="16385"
+#ip="127.0.0.1"
+#port="24124"
+
+# Sauvegarde temporaire positions signes
+board=[]
+
+# Indique si la partie est gagné ou égalité
+gagne_perdu=""
 
 
 #******************************************************
@@ -71,31 +77,61 @@ def get_Colonne_Ligne(event):
     elif (ordonnee > 200 and ordonnee < 300):
         ligne=3
 
+    
     global start
     if start=="start":
-        emplacement_signe=str(colonne)+","+str(ligne)
+        global gagne_perdu
+        if (gagne_perdu==""):
+            emplacement_signe=str(ligne)+","+str(colonne)+";"
 
-        # Ajoute le signe
-        Ajoute_Croix_Rond(emplacement_signe,False)
-        #global fen
-        comp_fen.update()
-        #time.sleep(1)
-        socket_client.send(emplacement_signe.encode())
-
-        global joueur
-        if (joueur=="J1"):
-            Ajoute_Dans_Log(message_en_attente,"SYSTEM")
+            # Ajoute le signe
+            Ajoute_Croix_Rond(emplacement_signe[:-1],False)
+            #global fen
             comp_fen.update()
-            
-            response_value=socket_client.recv(1024).decode()
-            print(response_value)
 
-            # Ajoute le signe de l'autre joueur
-            Ajoute_Croix_Rond(str(response_value),True)
-            Ajoute_Dans_Log(message_a_vous_de_jouer,"SYSTEM")
-        elif(joueur=="J2"):
-            J2_Process()
+            if (is_Filled()):
+                gagne_perdu="fill;"
+
+            if (Win()):
+                gagne_perdu="win;" 
+                Ajoute_Dans_Log("Vous avez gagné !!!!! :) ","SYSTEM")   
+
+            emplacement_signe+=gagne_perdu
+
+            #time.sleep(1)
+            socket_client.send(emplacement_signe.encode())
+
+            global joueur
+            if (joueur=="J1"):
+                Ajoute_Dans_Log(message_en_attente,"SYSTEM")
+                comp_fen.update()
+                
+                response_value=socket_client.recv(1024).decode()
+                print(response_value)
+
+                Interpretation_Resultat(response_value)
+                Ajoute_Dans_Log(message_a_vous_de_jouer,"SYSTEM")
+            elif(joueur=="J2"):
+                J2_Process()
         
+
+# Interprète le résultat reçu de l'autre joueur
+def Interpretation_Resultat(resultat: str) -> bool:
+    tab_response_value=resultat.split(";")
+
+    for value in tab_response_value:
+        regex_emplacement="^[1-3],[1-3]$"
+        if (re.match(regex_emplacement,value)):
+            # Ajoute le signe de l'autre joueur
+            Ajoute_Croix_Rond(str(value),True)
+        elif(value=="win"):
+            Ajoute_Dans_Log("Vous avez perdu !!!","SYSTEM")
+            gagne_perdu=value
+        elif(value=="fill"):
+            Ajoute_Dans_Log("Egalité !","SYSTEM")
+            gagne_perdu=value
+
+
 # Défini si une croix ou un rond doit être affiché
 def Ajoute_Croix_Rond(value: str,other_sign: bool):
     # Indique si le signe affiché doit être celui du joueur actuel ou de l'autre
@@ -107,8 +143,12 @@ def Ajoute_Croix_Rond(value: str,other_sign: bool):
         sign="x"
 
     if (value!=""):
-        colonne=int(value.split(",")[0])
-        ligne=int(value.split(",")[1])
+        ligne=int(value.split(",")[0])
+        colonne=int(value.split(",")[1])
+
+        # Ajoute dans la sauvegarde l'emplacement du signe
+        global board
+        board[ligne-1][colonne-1]=sign
 
         if (sign == "x"):
             set_Croix(colonne,ligne)
@@ -174,6 +214,9 @@ def Connexion():
             Ajoute_Dans_Log("Second joueur trouvé","SYSTEM")
             Ajoute_Dans_Log("La partie commence !","SYSTEM")
 
+            # Initialise le board
+            create_board()
+
             if (joueur=="J2"):
                 J2_Process()
             elif(joueur=="J1"):
@@ -182,7 +225,6 @@ def Connexion():
                 Ajoute_Dans_Log(message_a_vous_de_jouer,"SYSTEM")
         else:
             Ajoute_Dans_Log("Problème dans la connexion","SYSTEM")
-
 
 # Processus de jeu pour le joueur 2
 # A la différence du J1 qui commence à jouer, le J2 attend d'abord la croix du J1 avant de jouer
@@ -193,8 +235,7 @@ def J2_Process():
     response_value=socket_client.recv(1024).decode()
     print(response_value)
 
-    # Ajoute le signe de l'autre joueur
-    Ajoute_Croix_Rond(str(response_value),True)
+    Interpretation_Resultat(response_value)
     Ajoute_Dans_Log(message_a_vous_de_jouer,"SYSTEM")
 
 # Quitte la fenêtre en fermant la socket active
@@ -209,7 +250,70 @@ def Ajoute_Dans_Log(texte: str,who: str):
     comp_log_msg.configure(state='disabled')
     comp_log_msg.see("end")
 
+# Retourne True si le joueur a gagné la partie
+def Win() -> bool:
+    win = None
+    global board
 
+    n = len(board)
+
+    # checking rows
+    for i in range(n):
+        win = True
+        for j in range(n):
+            if board[i][j] != rond_croix:
+                win = False
+                break
+        if win:
+            return win
+
+    # checking columns
+    for i in range(n):
+        win = True
+        for j in range(n):
+            if board[j][i] != rond_croix:
+                win = False
+                break
+        if win:
+            return win
+
+    # checking diagonals
+    # Diagonale 1
+    win = True
+    for i in range(n):
+        if board[i][i] != rond_croix:
+            win = False
+            break
+    if win:
+        return win
+
+    # Diagonale 2
+    win = True
+    for i in range(n):
+        if board[i][n - 1 - i] != rond_croix:
+            win = False
+            break
+    if win:
+        return win
+    return False
+
+# Retourne True si le plateau est rempli
+def is_Filled() -> bool:
+    global board
+    for row in board:
+        for item in row:
+            if item == '-':
+                return False
+    return True
+
+# Transforme le board en matrice [3,3]
+def create_board():
+    global board
+    for i in range(3):
+        row = []
+        for j in range(3):
+            row.append('-')
+        board.append(row)
 
 #******************************************************
 #
